@@ -70,6 +70,20 @@ card; the small copy next to the name in the parents pane is display-only
 (it mirrors `kid.avatar`, it doesn't set it), to keep "change your look"
 as a kid-facing, playful action rather than a settings-panel one.
 
+The fixed backdrop behind the header/banner (`.sky` in `index.html`,
+48vh tall) is a hand-drawn-style beach scene — sky, sea, distant
+headland, dunes, a sandy path, fence posts — built as one inline SVG
+plus a couple of emoji clouds, with CSS-only "shimmer" (blurred,
+animated highlight blobs and wave-line paths) for the water. This was
+a deliberate choice over a WebGL/three.js water shader (the kind of
+effect it's approximating): no new dependency, no persistent
+render/GPU loop, works offline, respects `prefers-reduced-motion`, and
+stays cheap on lower-end tablets that may be left open all day. Keep it
+that way — don't reach for a 3D/WebGL library here without weighing
+that tradeoff again. The scene is intentionally muted and confined to
+the top band so it never competes with the opaque kid cards and
+checkboxes, which is the one thing on this screen that actually matters.
+
 ## Conventions
 
 - Keep it dependency-free static HTML/CSS/JS unless there's a strong reason

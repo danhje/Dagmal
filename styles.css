@@ -8,6 +8,12 @@
   --grass: #a7d977;
   --berry: #ff6b6b;
   --ink: #2d3436;
+  --sea-light: #7fdccf;
+  --sea-deep: #2d8fae;
+  --sand: #f2d9a6;
+  --sand-light: #f8e8c4;
+  --headland: #8497ac;
+  --fence: #a9825c;
   --card-bg: #fffdf7;
   --card-border: #f1e2b6;
   --radius-lg: 28px;
@@ -29,21 +35,61 @@ body {
   font-family: "Comic Sans MS", "Baloo 2", "Segoe UI Rounded", "Quicksand", system-ui, sans-serif;
   color: var(--ink);
   background:
-    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 42%, var(--grass) 42%, #8fcf62 100%);
+    linear-gradient(180deg, var(--sky-top) 0, var(--sky-bottom) 48vh, var(--grass) 48vh, #8fcf62 100%);
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
 }
 
-/* ---------- decorative sky ---------- */
+/* ---------- decorative beach scene ---------- */
 
 .sky {
   position: fixed;
   inset: 0;
-  height: 42vh;
+  height: 48vh;
   pointer-events: none;
   overflow: hidden;
   z-index: 0;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.shimmer-blob {
+  transform-origin: center;
+  animation: shimmer-drift 22s ease-in-out infinite;
+}
+.shimmer-a { animation-duration: 19s; }
+.shimmer-b { animation-duration: 24s; animation-delay: -6s; }
+.shimmer-c { animation-duration: 21s; animation-delay: -12s; }
+.shimmer-d { animation-duration: 26s; animation-delay: -3s; }
+
+@keyframes shimmer-drift {
+  0% { transform: translateX(-40px); opacity: 0.55; }
+  50% { transform: translateX(40px); opacity: 1; }
+  100% { transform: translateX(-40px); opacity: 0.55; }
+}
+
+.wave-a, .wave-b {
+  animation: wave-drift 14s ease-in-out infinite;
+}
+.wave-b { animation-duration: 18s; animation-delay: -5s; }
+
+@keyframes wave-drift {
+  0% { transform: translateX(-25px); }
+  50% { transform: translateX(25px); }
+  100% { transform: translateX(-25px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-blob, .wave-a, .wave-b, .cloud {
+    animation: none !important;
+  }
 }
 
 .cloud {

@@ -10,6 +10,96 @@
 <body>
 
 <div class="sky">
+  <svg class="scene" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" style="stop-color:var(--sky-top)" />
+        <stop offset="100%" style="stop-color:var(--sky-bottom)" />
+      </linearGradient>
+      <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" style="stop-color:var(--sea-deep)" />
+        <stop offset="100%" style="stop-color:var(--sea-light)" />
+      </linearGradient>
+      <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" style="stop-color:var(--sand)" />
+        <stop offset="100%" style="stop-color:var(--sand-light)" />
+      </linearGradient>
+      <filter id="soften" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="9" />
+      </filter>
+      <filter id="softenLg" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur stdDeviation="18" />
+      </filter>
+      <clipPath id="groundClip">
+        <rect x="0" y="466" width="1600" height="174" />
+      </clipPath>
+    </defs>
+
+    <rect x="0" y="0" width="1600" height="640" fill="url(#skyGrad)" />
+
+    <ellipse class="headland" cx="1360" cy="284" rx="260" ry="56" fill="var(--headland)" opacity="0.5" filter="url(#soften)" />
+
+    <rect x="0" y="284" width="1600" height="190" fill="url(#seaGrad)" />
+
+    <g class="shimmer">
+      <ellipse class="shimmer-blob shimmer-a" cx="260" cy="340" rx="150" ry="26" fill="#ffffff" opacity="0.3" filter="url(#softenLg)" />
+      <ellipse class="shimmer-blob shimmer-b" cx="760" cy="380" rx="190" ry="30" fill="#ffffff" opacity="0.28" filter="url(#softenLg)" />
+      <ellipse class="shimmer-blob shimmer-c" cx="1180" cy="350" rx="170" ry="26" fill="#ffffff" opacity="0.26" filter="url(#softenLg)" />
+      <ellipse class="shimmer-blob shimmer-d" cx="1440" cy="410" rx="140" ry="22" fill="#ffffff" opacity="0.24" filter="url(#softenLg)" />
+    </g>
+
+    <g class="wave-lines" fill="none" stroke="#ffffff" stroke-linecap="round">
+      <path class="wave-a" d="M -50 360 Q 200 348 450 360 T 950 360 T 1450 360 T 1650 360" stroke-width="4" opacity="0.22" filter="url(#soften)" />
+      <path class="wave-b" d="M -50 410 Q 250 398 550 410 T 1050 410 T 1650 410" stroke-width="5" opacity="0.2" filter="url(#soften)" />
+    </g>
+
+    <path class="foam" d="M -50 458 Q 200 446 420 458 T 860 458 T 1300 456 T 1650 460"
+      fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.55" filter="url(#soften)" />
+    <path class="foam" d="M -50 470 Q 250 462 500 470 T 1000 470 T 1650 468"
+      fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.4" filter="url(#soften)" />
+
+    <g clip-path="url(#groundClip)">
+      <rect x="0" y="466" width="1600" height="174" fill="url(#sandGrad)" />
+
+      <!-- Dunes are drawn as arcs of two big off-canvas ellipses, so the
+           gap between them (the path) is naturally wide in the foreground
+           and narrows toward the horizon. -->
+      <ellipse cx="-40" cy="440" rx="620" ry="380" fill="var(--grass)" />
+      <ellipse cx="1640" cy="440" rx="620" ry="380" fill="var(--grass)" />
+
+      <g class="fence" stroke="var(--fence)" opacity="0.55" stroke-linecap="round">
+        <path d="M 495 640 L 512 592 L 540 542 L 560 500 L 576 472" fill="none" stroke-width="3" />
+        <path d="M 1105 640 L 1088 592 L 1060 542 L 1040 500 L 1024 472" fill="none" stroke-width="3" />
+        <g stroke-width="6">
+          <line x1="503" y1="612" x2="503" y2="636" />
+          <line x1="526" y1="562" x2="526" y2="584" />
+          <line x1="550" y1="518" x2="550" y2="538" />
+          <line x1="568" y1="484" x2="568" y2="500" />
+          <line x1="1097" y1="612" x2="1097" y2="636" />
+          <line x1="1074" y1="562" x2="1074" y2="584" />
+          <line x1="1050" y1="518" x2="1050" y2="538" />
+          <line x1="1032" y1="484" x2="1032" y2="500" />
+        </g>
+      </g>
+
+      <g class="wildflowers">
+        <circle cx="110" cy="530" r="6" fill="var(--sun-light)" opacity="0.85" />
+        <circle cx="175" cy="560" r="5" fill="#ffffff" opacity="0.8" />
+        <circle cx="80" cy="585" r="6" fill="#ffb4c6" opacity="0.8" />
+        <circle cx="255" cy="510" r="5" fill="#ffffff" opacity="0.75" />
+        <circle cx="330" cy="565" r="6" fill="var(--sun-light)" opacity="0.85" />
+        <circle cx="400" cy="530" r="5" fill="#ffb4c6" opacity="0.75" />
+        <circle cx="210" cy="605" r="5" fill="var(--sun-light)" opacity="0.75" />
+        <circle cx="1490" cy="530" r="6" fill="var(--sun-light)" opacity="0.85" />
+        <circle cx="1425" cy="560" r="5" fill="#ffffff" opacity="0.8" />
+        <circle cx="1520" cy="585" r="6" fill="#ffb4c6" opacity="0.8" />
+        <circle cx="1345" cy="510" r="5" fill="#ffffff" opacity="0.75" />
+        <circle cx="1270" cy="565" r="6" fill="var(--sun-light)" opacity="0.85" />
+        <circle cx="1200" cy="530" r="5" fill="#ffb4c6" opacity="0.75" />
+        <circle cx="1390" cy="605" r="5" fill="var(--sun-light)" opacity="0.75" />
+      </g>
+    </g>
+  </svg>
   <div class="cloud cloud-1">☁️</div>
   <div class="cloud cloud-2">☁️</div>
   <div class="cloud cloud-3">☁️</div>
