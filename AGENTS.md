@@ -41,8 +41,18 @@ falls back to showing the soonest upcoming range — wrapping to tomorrow's
 earliest range if every range has already ended today — with a banner
 explaining that. This keeps the view from ever going empty while a kid is
 present. Progress bars count only the currently visible items, not the
-whole day. The view re-renders every 60s so it stays current if left open
-across a routine boundary (e.g. mounted on a tablet).
+whole day. The view re-renders every 20s (skipped while the parents pane
+is open, and re-run once it closes) so it swaps to the next routine on
+its own when the clock crosses a boundary — no reload needed. That
+re-render just rebuilds the DOM from `state`, so it never loses today's
+check-off progress.
+
+The "For parents" button doesn't open the parents panel directly — it
+opens a `gateOverlay` arithmetic challenge first (two random two-digit
+numbers, sum required; wrong answer generates a new pair). This is
+explicitly a "keep curious kids out" speed bump, not real security, so
+don't add anything (hashing, rate limiting, etc.) that would suggest
+otherwise. See `openGate`/`submitGate` in `app.js`.
 
 ## Conventions
 

@@ -77,6 +77,21 @@
   </div>
 </template>
 
+<!-- Parents gate: simple arithmetic check to keep kids out, not real security -->
+<div id="gateOverlay" class="overlay overlay-center" hidden>
+  <div class="gate-panel" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <button id="closeGate" class="btn-icon gate-close" type="button" aria-label="Close">✕</button>
+    <h2 id="gateTitle">🔒 Grown-ups only</h2>
+    <p class="gate-question">
+      What's <span id="gateA" class="gate-num"></span> + <span id="gateB" class="gate-num"></span>?
+    </p>
+    <input id="gateInput" class="text-input gate-input" type="text" inputmode="numeric" pattern="[0-9]*"
+      autocomplete="off" aria-label="Your answer">
+    <p id="gateError" class="gate-error" hidden>Not quite — try this one instead!</p>
+    <button id="gateSubmit" class="btn btn-primary gate-submit" type="button">Unlock</button>
+  </div>
+</div>
+
 <!-- Parents panel -->
 <div id="parentsOverlay" class="overlay" hidden>
   <div class="parents-panel" role="dialog" aria-modal="true" aria-labelledby="parentsTitle">

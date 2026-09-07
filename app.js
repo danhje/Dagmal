@@ -403,6 +403,7 @@
   function closeParents() {
     overlay.hidden = true;
     draft = null;
+    renderMain(); // pick up any routine boundary crossed while the panel was open
   }
 
   function renderKidsEditor() {
@@ -586,20 +587,74 @@
     state.kids = cleanedKids;
     state.timeRanges = cleanedRanges;
     saveState();
-    renderMain();
-    closeParents();
+    closeParents(); // also re-renders the main view with the new settings
     showToast("Saved! 🌟");
   }
 
+  // ---------------- parents gate ----------------
+  // A simple arithmetic check to keep young kids from wandering into
+  // settings — not real security, just a "grown-ups only" speed bump.
+
+  const gateOverlay = document.getElementById("gateOverlay");
+  const gateA = document.getElementById("gateA");
+  const gateB = document.getElementById("gateB");
+  const gateInput = document.getElementById("gateInput");
+  const gateError = document.getElementById("gateError");
+  let gateChallenge = null;
+
+  const randomTwoDigit = () => Math.floor(Math.random() * 90) + 10; // 10-99
+
+  function newGateChallenge() {
+    gateChallenge = { a: randomTwoDigit(), b: randomTwoDigit() };
+    gateA.textContent = gateChallenge.a;
+    gateB.textContent = gateChallenge.b;
+    gateInput.value = "";
+  }
+
+  function openGate() {
+    gateError.hidden = true;
+    newGateChallenge();
+    gateOverlay.hidden = false;
+    gateInput.focus();
+  }
+
+  function closeGate() {
+    gateOverlay.hidden = true;
+    gateChallenge = null;
+  }
+
+  function submitGate() {
+    const answer = parseInt(gateInput.value, 10);
+    if (gateChallenge && answer === gateChallenge.a + gateChallenge.b) {
+      closeGate();
+      openParents();
+    } else {
+      gateError.hidden = false;
+      newGateChallenge();
+      gateInput.focus();
+    }
+  }
+
+  document.getElementById("gateSubmit").addEventListener("click", submitGate);
+  document.getElementById("closeGate").addEventListener("click", closeGate);
+  gateInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitGate();
+  });
+  gateOverlay.addEventListener("click", (e) => {
+    if (e.target === gateOverlay) closeGate();
+  });
+
   // ---------------- events ----------------
 
-  document.getElementById("openParents").addEventListener("click", openParents);
+  document.getElementById("openParents").addEventListener("click", openGate);
   document.getElementById("closeParents").addEventListener("click", closeParents);
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeParents();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !overlay.hidden) closeParents();
+    if (e.key !== "Escape") return;
+    if (!gateOverlay.hidden) closeGate();
+    else if (!overlay.hidden) closeParents();
   });
 
   document.getElementById("addKid").addEventListener("click", () => {
@@ -625,7 +680,11 @@
 
   // Keep the "what's relevant right now" view current if the page is left
   // open across a routine boundary (e.g. mounted on a tablet all day).
+  // Re-rendering just rebuilds the DOM from `state`, which already holds
+  // today's checks, so it never loses check-off progress. Skipped while
+  // the parents pane is open so it doesn't fight with an in-progress edit;
+  // closeParents()/saveDraft() re-render once it closes to catch up.
   setInterval(() => {
     if (overlay.hidden) renderMain();
-  }, 60000);
+  }, 20000);
 })();
