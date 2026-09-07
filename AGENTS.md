@@ -54,6 +54,14 @@ explicitly a "keep curious kids out" speed bump, not real security, so
 don't add anything (hashing, rate limiting, etc.) that would suggest
 otherwise. See `openGate`/`submitGate` in `app.js`.
 
+To-do items within a time range keep whatever order they're in inside
+`range.items`, and that's user-controlled: the parents pane has up/down
+buttons on each item to reorder it (`renderRangesEditor` in `app.js`).
+Deliberately not drag-and-drop — native HTML5 drag-and-drop doesn't work
+on touch (tablets are a primary target here), and a touch-compatible
+implementation would need real complexity for a "keep order minor" UI
+detail. If that changes, buttons should stay as a fallback either way.
+
 ## Conventions
 
 - Keep it dependency-free static HTML/CSS/JS unless there's a strong reason

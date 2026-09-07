@@ -599,6 +599,34 @@ body {
   padding: 0.4rem 0.65rem;
 }
 
+.item-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.btn-reorder {
+  width: 1.7rem;
+  height: 1.35rem;
+  border-radius: 6px;
+  border: 2px solid var(--card-border);
+  background: #fff;
+  color: var(--leaf-dark);
+  font-size: 0.65rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-reorder:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 .btn-add-item {
   background: none;
   border: 2px dashed #cfe8d5;

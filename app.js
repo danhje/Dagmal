@@ -501,6 +501,36 @@
         const itemRow = document.createElement("div");
         itemRow.className = "item-edit-row";
 
+        const reorderWrap = document.createElement("div");
+        reorderWrap.className = "item-reorder";
+
+        const moveUpBtn = document.createElement("button");
+        moveUpBtn.type = "button";
+        moveUpBtn.className = "btn-reorder";
+        moveUpBtn.textContent = "▲";
+        moveUpBtn.setAttribute("aria-label", "Move item up");
+        moveUpBtn.disabled = iIdx === 0;
+        moveUpBtn.addEventListener("click", () => {
+          if (iIdx === 0) return;
+          [range.items[iIdx - 1], range.items[iIdx]] = [range.items[iIdx], range.items[iIdx - 1]];
+          renderRangesEditor();
+        });
+
+        const moveDownBtn = document.createElement("button");
+        moveDownBtn.type = "button";
+        moveDownBtn.className = "btn-reorder";
+        moveDownBtn.textContent = "▼";
+        moveDownBtn.setAttribute("aria-label", "Move item down");
+        moveDownBtn.disabled = iIdx === range.items.length - 1;
+        moveDownBtn.addEventListener("click", () => {
+          if (iIdx === range.items.length - 1) return;
+          [range.items[iIdx], range.items[iIdx + 1]] = [range.items[iIdx + 1], range.items[iIdx]];
+          renderRangesEditor();
+        });
+
+        reorderWrap.appendChild(moveUpBtn);
+        reorderWrap.appendChild(moveDownBtn);
+
         const itemInput = document.createElement("input");
         itemInput.type = "text";
         itemInput.className = "text-input";
@@ -521,6 +551,7 @@
           renderRangesEditor();
         });
 
+        itemRow.appendChild(reorderWrap);
         itemRow.appendChild(itemInput);
         itemRow.appendChild(removeItemBtn);
         itemsWrap.appendChild(itemRow);
