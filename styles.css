@@ -175,10 +175,12 @@ body {
 .main-view {
   position: relative;
   z-index: 1;
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 1rem 1.25rem 4rem;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
   gap: 1.5rem;
 }
 
@@ -558,4 +560,5 @@ body {
   .brand-text h1 { font-size: 1.7rem; }
   .kid-card { padding: 1rem; }
   .parents-panel { width: 100%; }
+  .main-view { grid-template-columns: 1fr; }
 }
