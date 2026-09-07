@@ -22,6 +22,13 @@ State (kids, time ranges, to-do items, and today's checked-off items) lives
 entirely in `localStorage` under the key `dagmal:state`. There is no server
 and no login. Checked-off items reset automatically each new day.
 
+A time range has no name of its own — it's defined by a `from`/`to` time
+(`"HH:MM"`, 24h), and the main view labels it with a formatted time span
+(e.g. "7:00 AM – 8:00 AM") plus an icon picked from the start hour. Old
+saved data that used a `name` field instead is migrated on load
+(`migrateRanges` in `app.js`) — keep that migration in place as long as
+pre-time-range localStorage data might still be out there.
+
 Constraints enforced in the UI: 1–5 kids, 1–5 time ranges, 1–50 items per
 time range.
 

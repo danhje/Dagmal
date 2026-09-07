@@ -19,7 +19,8 @@
       timeRanges: [
         {
           id: uid(),
-          name: "Morning",
+          from: "07:00",
+          to: "08:00",
           items: [
             { id: uid(), text: "Brush teeth" },
             { id: uid(), text: "Get dressed" },
@@ -29,7 +30,8 @@
         },
         {
           id: uid(),
-          name: "Bedtime",
+          from: "19:00",
+          to: "20:00",
           items: [
             { id: uid(), text: "Bath time" },
             { id: uid(), text: "Pajamas on" },
@@ -43,6 +45,36 @@
     };
   }
 
+  // Older versions of Dagmál gave each time range a free-text name instead
+  // of a from/to time. Map those to sensible default times so existing
+  // localStorage data keeps working.
+  function migrateRanges(ranges) {
+    let autoHour = 9;
+    return (ranges || []).map((r) => {
+      if (r.from && r.to) {
+        return { id: r.id, from: r.from, to: r.to, items: r.items || [] };
+      }
+      const n = (r.name || "").toLowerCase();
+      let from, to;
+      if (n.includes("morning")) {
+        from = "07:00";
+        to = "08:00";
+      } else if (n.includes("bed") || n.includes("night")) {
+        from = "19:00";
+        to = "20:00";
+      } else if (n.includes("after")) {
+        from = "15:00";
+        to = "16:00";
+      } else {
+        const h = autoHour % 24;
+        from = `${String(h).padStart(2, "0")}:00`;
+        to = `${String((h + 1) % 24).padStart(2, "0")}:00`;
+        autoHour += 2;
+      }
+      return { id: r.id, from, to, items: r.items || [] };
+    });
+  }
+
   function loadState() {
     let raw;
     try {
@@ -54,6 +86,7 @@
     try {
       const parsed = JSON.parse(raw);
       if (!parsed.kids || !parsed.timeRanges) return defaultState();
+      parsed.timeRanges = migrateRanges(parsed.timeRanges);
       if (parsed.checksDate !== todayKey()) {
         parsed.checksDate = todayKey();
         parsed.checks = {};
@@ -154,6 +187,26 @@
 
   const ENCOURAGEMENTS = ["Great job! 🌟", "Way to go! 🎉", "Awesome! 🌈", "You did it! 🌻", "Yay! ☀️"];
 
+  // ---------------- time formatting ----------------
+
+  function formatTime(t) {
+    if (!t) return "";
+    const [hStr, mStr] = t.split(":");
+    let h = parseInt(hStr, 10);
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${mStr} ${ampm}`;
+  }
+
+  function formatTimeRange(from, to) {
+    return `${formatTime(from)} – ${formatTime(to)}`;
+  }
+
+  function sortedRanges() {
+    return state.timeRanges.slice().sort((a, b) => (a.from || "").localeCompare(b.from || ""));
+  }
+
   // ---------------- main view rendering ----------------
 
   const mainView = document.getElementById("mainView");
@@ -199,11 +252,12 @@
 
       const rangesWrap = card.querySelector(".kid-ranges");
 
-      state.timeRanges.forEach((range) => {
+      sortedRanges().forEach((range) => {
         if (range.items.length === 0) return;
         const rangeTpl = document.getElementById("rangeBlockTemplate");
         const rangeEl = rangeTpl.content.cloneNode(true);
-        rangeEl.querySelector(".range-title").textContent = rangeIcon(range.name) + " " + (range.name || "Routine");
+        rangeEl.querySelector(".range-title").textContent =
+          rangeIcon(range.from) + " " + formatTimeRange(range.from, range.to);
 
         const list = rangeEl.querySelector(".item-list");
         range.items.forEach((item) => {
@@ -251,12 +305,12 @@
     });
   }
 
-  function rangeIcon(name) {
-    const n = (name || "").toLowerCase();
-    if (n.includes("morning")) return "🌅";
-    if (n.includes("bed") || n.includes("night")) return "🌙";
-    if (n.includes("after")) return "🌤️";
-    return "⭐";
+  function rangeIcon(from) {
+    if (!from) return "⭐";
+    const h = parseInt(from.split(":")[0], 10);
+    if (h < 12) return "🌅";
+    if (h >= 17) return "🌙";
+    return "🌤️";
   }
 
   function updateKidProgress(cardRoot, kidId) {
@@ -342,14 +396,26 @@
       const head = document.createElement("div");
       head.className = "range-edit-head";
 
-      const nameInput = document.createElement("input");
-      nameInput.type = "text";
-      nameInput.className = "text-input";
-      nameInput.placeholder = "Time range name (e.g. Morning)";
-      nameInput.maxLength = 30;
-      nameInput.value = range.name;
-      nameInput.addEventListener("input", () => {
-        range.name = nameInput.value;
+      const fromInput = document.createElement("input");
+      fromInput.type = "time";
+      fromInput.className = "text-input time-input";
+      fromInput.setAttribute("aria-label", "Start time");
+      fromInput.value = range.from || "";
+      fromInput.addEventListener("input", () => {
+        range.from = fromInput.value;
+      });
+
+      const sep = document.createElement("span");
+      sep.className = "time-sep";
+      sep.textContent = "–";
+
+      const toInput = document.createElement("input");
+      toInput.type = "time";
+      toInput.className = "text-input time-input";
+      toInput.setAttribute("aria-label", "End time");
+      toInput.value = range.to || "";
+      toInput.addEventListener("input", () => {
+        range.to = toInput.value;
       });
 
       const removeRangeBtn = document.createElement("button");
@@ -362,7 +428,9 @@
         renderRangesEditor();
       });
 
-      head.appendChild(nameInput);
+      head.appendChild(fromInput);
+      head.appendChild(sep);
+      head.appendChild(toInput);
       head.appendChild(removeRangeBtn);
       block.appendChild(head);
 
@@ -433,13 +501,14 @@
     const cleanedRanges = draft.timeRanges
       .map((r) => ({
         id: r.id,
-        name: r.name.trim(),
+        from: r.from,
+        to: r.to,
         items: r.items
           .map((it) => ({ id: it.id, text: it.text.trim() }))
           .filter((it) => it.text.length > 0)
           .slice(0, MAX_ITEMS),
       }))
-      .filter((r) => r.name.length > 0)
+      .filter((r) => r.from && r.to)
       .slice(0, MAX_RANGES);
 
     // prune checks for kids/items that no longer exist
@@ -485,7 +554,7 @@
 
   document.getElementById("addRange").addEventListener("click", () => {
     if (draft.timeRanges.length >= MAX_RANGES) return;
-    draft.timeRanges.push({ id: uid(), name: "", items: [{ id: uid(), text: "" }] });
+    draft.timeRanges.push({ id: uid(), from: "08:00", to: "09:00", items: [{ id: uid(), text: "" }] });
     renderRangesEditor();
   });
 
