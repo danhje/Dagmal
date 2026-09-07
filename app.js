@@ -207,6 +207,46 @@
     return state.timeRanges.slice().sort((a, b) => (a.from || "").localeCompare(b.from || ""));
   }
 
+  // ---------------- relevance (which routine matters right now) ----------------
+
+  function toMinutes(t) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  function nowMinutes() {
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  // Handles ranges that wrap past midnight (e.g. 20:00 -> 07:00).
+  function isRangeActive(range, nowMin) {
+    const from = toMinutes(range.from);
+    const to = toMinutes(range.to);
+    if (from === to) return false;
+    if (from < to) return nowMin >= from && nowMin < to;
+    return nowMin >= from || nowMin < to;
+  }
+
+  // Ranges due right now; if none, fall back to whichever range starts
+  // soonest (wrapping to tomorrow morning if every range has already
+  // ended today) so the view is never just empty.
+  function relevantRanges(ranges, nowMin) {
+    const active = ranges.filter((r) => isRangeActive(r, nowMin));
+    if (active.length > 0) return { ranges: active, upcoming: false };
+
+    let best = null;
+    let bestDist = Infinity;
+    ranges.forEach((r) => {
+      const dist = (toMinutes(r.from) - nowMin + 1440) % 1440;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = r;
+      }
+    });
+    return { ranges: best ? [best] : [], upcoming: true };
+  }
+
   // ---------------- main view rendering ----------------
 
   const mainView = document.getElementById("mainView");
@@ -229,8 +269,13 @@
     return state.timeRanges.reduce((sum, r) => sum + r.items.length, 0);
   }
 
-  function kidCheckedCount(kidId) {
-    return Object.keys(state.checks[kidId] || {}).length;
+  function kidCheckedCount(kidId, itemIds) {
+    const checks = state.checks[kidId] || {};
+    let count = 0;
+    itemIds.forEach((id) => {
+      if (checks[id]) count++;
+    });
+    return count;
   }
 
   function renderMain() {
@@ -242,6 +287,20 @@
       return;
     }
 
+    const usableRanges = sortedRanges().filter((r) => r.items.length > 0);
+    const { ranges: rangesToShow, upcoming } = relevantRanges(usableRanges, nowMinutes());
+
+    if (upcoming && rangesToShow.length > 0) {
+      const bannerTpl = document.getElementById("dayBannerTemplate");
+      const banner = bannerTpl.content.cloneNode(true);
+      banner.querySelector(".day-banner-text").textContent =
+        "Nothing due right now — coming up: " +
+        rangesToShow.map((r) => formatTimeRange(r.from, r.to)).join(", ");
+      mainView.appendChild(banner);
+    }
+
+    const visibleItemIds = rangesToShow.flatMap((r) => r.items.map((it) => it.id));
+
     state.kids.forEach((kid, idx) => {
       const cardTpl = document.getElementById("kidCardTemplate");
       const card = cardTpl.content.cloneNode(true);
@@ -252,8 +311,7 @@
 
       const rangesWrap = card.querySelector(".kid-ranges");
 
-      sortedRanges().forEach((range) => {
-        if (range.items.length === 0) return;
+      rangesToShow.forEach((range) => {
         const rangeTpl = document.getElementById("rangeBlockTemplate");
         const rangeEl = rangeTpl.content.cloneNode(true);
         rangeEl.querySelector(".range-title").textContent =
@@ -264,34 +322,35 @@
           const rowTpl = document.getElementById("itemRowTemplate");
           const row = rowTpl.content.cloneNode(true);
           const rowRoot = row.querySelector(".item-row");
-          const checkBtn = row.querySelector(".item-check");
+          const rowBtn = row.querySelector(".item-row-btn");
+          const checkVisual = row.querySelector(".item-check");
           row.querySelector(".item-text").textContent = item.text;
 
           const checked = isChecked(kid.id, item.id);
           if (checked) {
             rowRoot.classList.add("checked");
-            checkBtn.classList.add("is-checked");
-            checkBtn.setAttribute("aria-pressed", "true");
+            checkVisual.classList.add("is-checked");
+            rowBtn.setAttribute("aria-pressed", "true");
           }
 
-          checkBtn.addEventListener("click", () => {
+          rowBtn.addEventListener("click", () => {
             const nowChecked = !isChecked(kid.id, item.id);
             setChecked(kid.id, item.id, nowChecked);
             rowRoot.classList.toggle("checked", nowChecked);
-            checkBtn.classList.toggle("is-checked", nowChecked);
-            checkBtn.setAttribute("aria-pressed", String(nowChecked));
+            checkVisual.classList.toggle("is-checked", nowChecked);
+            rowBtn.setAttribute("aria-pressed", String(nowChecked));
 
             if (nowChecked) {
-              checkBtn.classList.remove("celebrate");
-              void checkBtn.offsetWidth;
-              checkBtn.classList.add("celebrate");
-              burstConfetti(checkBtn);
+              checkVisual.classList.remove("celebrate");
+              void checkVisual.offsetWidth;
+              checkVisual.classList.add("celebrate");
+              burstConfetti(checkVisual);
               playChime();
               if (Math.random() < 0.35) {
                 showToast(ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)]);
               }
             }
-            updateKidProgress(cardRoot, kid.id);
+            updateKidProgress(cardRoot, kid.id, visibleItemIds);
           });
 
           list.appendChild(row);
@@ -301,7 +360,7 @@
       });
 
       mainView.appendChild(card);
-      updateKidProgress(cardRoot, kid.id);
+      updateKidProgress(cardRoot, kid.id, visibleItemIds);
     });
   }
 
@@ -313,9 +372,9 @@
     return "🌤️";
   }
 
-  function updateKidProgress(cardRoot, kidId) {
-    const total = state.timeRanges.reduce((sum, r) => sum + r.items.length, 0);
-    const done = kidCheckedCount(kidId);
+  function updateKidProgress(cardRoot, kidId, itemIds) {
+    const total = itemIds.length;
+    const done = kidCheckedCount(kidId, itemIds);
     const pct = total === 0 ? 0 : Math.round((done / total) * 100);
     const fill = cardRoot.querySelector(".kid-progress-fill");
     const label = cardRoot.querySelector(".kid-progress-label");
@@ -563,4 +622,10 @@
   // ---------------- init ----------------
 
   renderMain();
+
+  // Keep the "what's relevant right now" view current if the page is left
+  // open across a routine boundary (e.g. mounted on a tablet all day).
+  setInterval(() => {
+    if (overlay.hidden) renderMain();
+  }, 60000);
 })();

@@ -61,11 +61,20 @@
 
 <template id="itemRowTemplate">
   <li class="item-row">
-    <button type="button" class="item-check" aria-pressed="false">
-      <span class="check-mark">✓</span>
+    <button type="button" class="item-row-btn" aria-pressed="false">
+      <span class="item-check">
+        <span class="check-mark">✓</span>
+      </span>
+      <span class="item-text"></span>
     </button>
-    <span class="item-text"></span>
   </li>
+</template>
+
+<template id="dayBannerTemplate">
+  <div class="day-banner">
+    <span class="day-banner-emoji">⏰</span>
+    <span class="day-banner-text"></span>
+  </div>
 </template>
 
 <!-- Parents panel -->

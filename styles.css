@@ -196,6 +196,21 @@ body {
 .empty-state h2 { margin: 0 0 0.4rem; color: var(--leaf-dark); }
 .empty-state p { margin: 0; color: #555; }
 
+.day-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #fff7e0;
+  border: 2px solid #f4dfa0;
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.2rem;
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  color: #8a5a00;
+}
+.day-banner-emoji { font-size: 1.4rem; }
+
 .kid-card {
   background: var(--card-bg);
   border: 3px solid var(--card-border);
@@ -295,36 +310,49 @@ body {
 }
 
 .item-row {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  background: #fff;
-  border-radius: var(--radius-sm);
-  padding: 0.55rem 0.8rem;
-  transition: background 0.25s ease, transform 0.15s ease;
+  display: block;
 }
 
-.item-row.checked {
+.item-row-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 1.1rem 1.15rem;
+  min-height: 3.6rem;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.1s ease;
+}
+
+.item-row-btn:active {
+  transform: scale(0.98);
+}
+
+.item-row.checked .item-row-btn {
   background: #eafaf0;
 }
 
 .item-check {
   flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
+  width: 2.3rem;
+  height: 2.3rem;
   border-radius: 50%;
   border: 3px solid #cfe8d5;
   background: #fff;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .item-check .check-mark {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #fff;
   opacity: 0;
   transform: scale(0.4);
@@ -352,8 +380,8 @@ body {
 }
 
 .item-text {
-  font-size: 1.02rem;
-  line-height: 1.3;
+  font-size: 1.1rem;
+  line-height: 1.35;
 }
 
 .item-row.checked .item-text {

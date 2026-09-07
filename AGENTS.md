@@ -32,6 +32,18 @@ pre-time-range localStorage data might still be out there.
 Constraints enforced in the UI: 1–5 kids, 1–5 time ranges, 1–50 items per
 time range.
 
+The main view only shows the routine(s) relevant to the current time of
+day, not the whole day's lists (`relevantRanges`/`isRangeActive` in
+`app.js`). A range is "active" if now falls within its `from`/`to` window;
+this correctly handles ranges that wrap past midnight (`from > to`, e.g.
+20:00 → 07:00). If no range is active (a gap between routines), the view
+falls back to showing the soonest upcoming range — wrapping to tomorrow's
+earliest range if every range has already ended today — with a banner
+explaining that. This keeps the view from ever going empty while a kid is
+present. Progress bars count only the currently visible items, not the
+whole day. The view re-renders every 60s so it stays current if left open
+across a routine boundary (e.g. mounted on a tablet).
+
 ## Conventions
 
 - Keep it dependency-free static HTML/CSS/JS unless there's a strong reason
