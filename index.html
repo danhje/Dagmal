@@ -10,6 +10,7 @@
 <body>
 
 <div class="sky">
+  <canvas class="sea-canvas" aria-hidden="true"></canvas>
   <svg class="scene" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
@@ -30,27 +31,56 @@
       <filter id="softenLg" x="-80%" y="-80%" width="260%" height="260%">
         <feGaussianBlur stdDeviation="18" />
       </filter>
+      <clipPath id="skyClip">
+        <rect x="0" y="0" width="1600" height="286" />
+      </clipPath>
       <clipPath id="groundClip">
         <rect x="0" y="466" width="1600" height="174" />
       </clipPath>
     </defs>
 
-    <rect x="0" y="0" width="1600" height="640" fill="url(#skyGrad)" />
+    <rect x="0" y="0" width="1600" height="290" fill="url(#skyGrad)" />
 
-    <ellipse class="headland" cx="1360" cy="284" rx="260" ry="56" fill="var(--headland)" opacity="0.5" filter="url(#soften)" />
-
-    <rect x="0" y="284" width="1600" height="190" fill="url(#seaGrad)" />
-
-    <g class="shimmer">
-      <ellipse class="shimmer-blob shimmer-a" cx="260" cy="340" rx="150" ry="26" fill="#ffffff" opacity="0.3" filter="url(#softenLg)" />
-      <ellipse class="shimmer-blob shimmer-b" cx="760" cy="380" rx="190" ry="30" fill="#ffffff" opacity="0.28" filter="url(#softenLg)" />
-      <ellipse class="shimmer-blob shimmer-c" cx="1180" cy="350" rx="170" ry="26" fill="#ffffff" opacity="0.26" filter="url(#softenLg)" />
-      <ellipse class="shimmer-blob shimmer-d" cx="1440" cy="410" rx="140" ry="22" fill="#ffffff" opacity="0.24" filter="url(#softenLg)" />
+    <!-- The far side of the bay: headland, low green scrub and a pale strip
+         of sand along the horizon — the beach in the distance. Clipped to the
+         sky so nothing spills down into the water. -->
+    <g class="far-shore" clip-path="url(#skyClip)">
+      <ellipse class="headland" cx="1330" cy="252" rx="270" ry="40" fill="var(--headland)" opacity="0.35" filter="url(#soften)" />
+      <path d="M -20 276 Q 150 248 320 268 Q 450 244 590 270 Q 730 252 890 272 Q 1050 246 1210 268 Q 1380 250 1620 274 L 1620 292 L -20 292 Z"
+        fill="var(--leaf-dark)" opacity="0.22" />
+      <path d="M -20 281 Q 190 269 390 277 Q 545 267 725 279 Q 905 270 1085 279 Q 1285 269 1620 281 L 1620 292 L -20 292 Z"
+        fill="var(--leaf)" opacity="0.32" />
+      <g class="far-trees" fill="var(--leaf-dark)" opacity="0.28">
+        <circle cx="215" cy="267" r="5" />
+        <circle cx="240" cy="270" r="4" />
+        <circle cx="640" cy="265" r="5" />
+        <circle cx="665" cy="269" r="4" />
+        <circle cx="1015" cy="267" r="4" />
+        <circle cx="1290" cy="264" r="5" />
+      </g>
+      <!-- The distant strand: a sliver of sand that widens and narrows the
+           way a far shoreline does, rather than a ruled line. -->
+      <path class="far-sand" d="M -20 279 Q 220 274 470 280 Q 700 285 960 278 Q 1230 273 1620 280 L 1620 292 L -20 292 Z"
+        fill="var(--sand-light)" opacity="0.85" />
     </g>
 
-    <g class="wave-lines" fill="none" stroke="#ffffff" stroke-linecap="round">
-      <path class="wave-a" d="M -50 360 Q 200 348 450 360 T 950 360 T 1450 360 T 1650 360" stroke-width="4" opacity="0.22" filter="url(#soften)" />
-      <path class="wave-b" d="M -50 410 Q 250 398 550 410 T 1050 410 T 1650 410" stroke-width="5" opacity="0.2" filter="url(#soften)" />
+    <!-- Fallback sea: a flat gradient with CSS-animated shimmer. The WebGL
+         water in water.js fades this out once it has drawn a frame; it stays
+         put when there's no WebGL or the user prefers reduced motion. -->
+    <g class="sea-fallback">
+      <rect x="0" y="284" width="1600" height="190" fill="url(#seaGrad)" />
+
+      <g class="shimmer">
+        <ellipse class="shimmer-blob shimmer-a" cx="260" cy="340" rx="150" ry="26" fill="#ffffff" opacity="0.3" filter="url(#softenLg)" />
+        <ellipse class="shimmer-blob shimmer-b" cx="760" cy="380" rx="190" ry="30" fill="#ffffff" opacity="0.28" filter="url(#softenLg)" />
+        <ellipse class="shimmer-blob shimmer-c" cx="1180" cy="350" rx="170" ry="26" fill="#ffffff" opacity="0.26" filter="url(#softenLg)" />
+        <ellipse class="shimmer-blob shimmer-d" cx="1440" cy="410" rx="140" ry="22" fill="#ffffff" opacity="0.24" filter="url(#softenLg)" />
+      </g>
+
+      <g class="wave-lines" fill="none" stroke="#ffffff" stroke-linecap="round">
+        <path class="wave-a" d="M -50 360 Q 200 348 450 360 T 950 360 T 1450 360 T 1650 360" stroke-width="4" opacity="0.22" filter="url(#soften)" />
+        <path class="wave-b" d="M -50 410 Q 250 398 550 410 T 1050 410 T 1650 410" stroke-width="5" opacity="0.2" filter="url(#soften)" />
+      </g>
     </g>
 
     <path class="foam" d="M -50 458 Q 200 446 420 458 T 860 458 T 1300 456 T 1650 460"
@@ -219,5 +249,6 @@
 <div id="toast" class="toast" hidden></div>
 
 <script src="app.js"></script>
+<script src="water.js"></script>
 </body>
 </html>

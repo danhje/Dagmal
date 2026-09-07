@@ -17,6 +17,8 @@ Dagmál is a plain static site (no build step, no framework, no backend):
 - `styles.css` — all styling (sunny/nature theme, animations).
 - `app.js` — all behavior: state management, rendering, the parents editor,
   confetti/sound feedback. IIFE, vanilla JS, no dependencies.
+- `water.js` — the WebGL sea in the backdrop, self-contained and purely
+  decorative. Kept out of `app.js` so the app logic stays shader-free.
 
 State (kids, time ranges, to-do items, and today's checked-off items) lives
 entirely in `localStorage` under the key `dagmal:state`. There is no server
@@ -71,18 +73,45 @@ card; the small copy next to the name in the parents pane is display-only
 as a kid-facing, playful action rather than a settings-panel one.
 
 The fixed backdrop behind the header/banner (`.sky` in `index.html`,
-48vh tall) is a hand-drawn-style beach scene — sky, sea, distant
-headland, dunes, a sandy path, fence posts — built as one inline SVG
-plus a couple of emoji clouds, with CSS-only "shimmer" (blurred,
-animated highlight blobs and wave-line paths) for the water. This was
-a deliberate choice over a WebGL/three.js water shader (the kind of
-effect it's approximating): no new dependency, no persistent
-render/GPU loop, works offline, respects `prefers-reduced-motion`, and
-stays cheap on lower-end tablets that may be left open all day. Keep it
-that way — don't reach for a 3D/WebGL library here without weighing
-that tradeoff again. The scene is intentionally muted and confined to
-the top band so it never competes with the opaque kid cards and
-checkboxes, which is the one thing on this screen that actually matters.
+48vh tall) is a hand-drawn-style beach scene — sky, distant shore, sea,
+dunes, a sandy path, fence posts — built as one inline SVG plus a couple
+of emoji clouds. Across the horizon, clipped to the sky by `#skyClip`,
+sits the far side of the bay: headland, low scrub and a sliver of pale
+sand (the beach in the distance).
+
+The sea itself is live WebGL, in `water.js`: layered directional ripples
+whose gradient stands in for the two scrolling normal maps a three.js
+`Water2` surface blends together, plus sun glitter, crest foam and a hazy
+sky reflection near the horizon. It's a deliberate re-implementation of
+https://codepen.io/wakana-k/pen/QWXwMqw rather than a port of it — three.js
+plus its remote HDR/normal-map textures would be ~600 KB and would break
+the app offline, which matters for a tablet on a kitchen counter. Keep it
+dependency-free and self-contained; don't swap in a library here.
+
+How the two layers fit together: the canvas sits *behind* the scene SVG and
+shows through it. The SVG's sky rect stops at the horizon, and the sea band
+(gradient + CSS shimmer + wave lines) is grouped as `.sea-fallback`, which
+fades to `opacity: 0` once `water.js` has drawn its first frame and put
+`.water-live` on `<body>`. So the CSS-only sea is the fallback, still shown
+when there's no WebGL, when the context is lost, or under
+`prefers-reduced-motion`. Sand, dunes and foam paint over the canvas either
+way.
+
+`water.js` maps the SVG's horizon (y 284) and waterline (y 472) into canvas
+pixels with `getScreenCTM()` rather than assuming a position — the scene is
+drawn `preserveAspectRatio="xMidYMax slice"`, so the band moves with the
+viewport aspect. It re-measures on resize/orientation change. Its water
+colors are read from the `--sea-deep`/`--sea-light`/`--sky-bottom` custom
+properties, so retheming the CSS retints the water too. Cost is kept down
+deliberately: 30fps cap, device pixel ratio capped at 1.5, and the render
+loop stops entirely while the tab is hidden — keep those in place.
+
+The scene is intentionally muted and confined to the top band so it never
+competes with the opaque kid cards and checkboxes, which is the one thing
+on this screen that actually matters.
+
+`.claude/launch.json` defines a `dagmal` config that serves the folder on
+port 8752 — the scene needs `http://`, not `file://`, to preview properly.
 
 ## Conventions
 
