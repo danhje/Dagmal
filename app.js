@@ -15,7 +15,7 @@
 
   function defaultState() {
     return {
-      kids: [{ id: uid(), name: "Alex" }],
+      kids: [{ id: uid(), name: "Alex", avatar: AVATARS[0] }],
       timeRanges: [
         {
           id: uid(),
@@ -75,6 +75,18 @@
     });
   }
 
+  // Older versions of Dagmál picked each kid's avatar from their position
+  // in the list; now it's an explicit, per-kid, cycle-and-persist choice.
+  // Give kids saved before that a starting avatar matching what they
+  // already saw on screen.
+  function migrateKids(kids) {
+    return (kids || []).map((k, idx) => ({
+      id: k.id,
+      name: k.name,
+      avatar: k.avatar || AVATARS[idx % AVATARS.length],
+    }));
+  }
+
   function loadState() {
     let raw;
     try {
@@ -86,6 +98,7 @@
     try {
       const parsed = JSON.parse(raw);
       if (!parsed.kids || !parsed.timeRanges) return defaultState();
+      parsed.kids = migrateKids(parsed.kids);
       parsed.timeRanges = migrateRanges(parsed.timeRanges);
       if (parsed.checksDate !== todayKey()) {
         parsed.checksDate = todayKey();
@@ -306,7 +319,17 @@
       const card = cardTpl.content.cloneNode(true);
 
       const cardRoot = card.querySelector(".kid-card");
-      card.querySelector(".kid-avatar").textContent = AVATARS[idx % AVATARS.length];
+      const avatarBtn = card.querySelector(".kid-avatar");
+      avatarBtn.textContent = kid.avatar || AVATARS[idx % AVATARS.length];
+      avatarBtn.addEventListener("click", () => {
+        const from = AVATARS.indexOf(kid.avatar);
+        kid.avatar = AVATARS[(from + 1) % AVATARS.length];
+        saveState();
+        avatarBtn.textContent = kid.avatar;
+        avatarBtn.classList.remove("celebrate");
+        void avatarBtn.offsetWidth;
+        avatarBtn.classList.add("celebrate");
+      });
       card.querySelector(".kid-name").textContent = kid.name || "Unnamed";
 
       const rangesWrap = card.querySelector(".kid-ranges");
@@ -413,8 +436,9 @@
       row.className = "kid-edit-row";
 
       const avatar = document.createElement("span");
-      avatar.textContent = AVATARS[idx % AVATARS.length];
+      avatar.textContent = kid.avatar || AVATARS[idx % AVATARS.length];
       avatar.style.fontSize = "1.4rem";
+      avatar.title = "Tap this kid's avatar in the main view to change it";
 
       const input = document.createElement("input");
       input.type = "text";
@@ -585,7 +609,7 @@
 
   function saveDraft() {
     const cleanedKids = draft.kids
-      .map((k) => ({ id: k.id, name: k.name.trim() }))
+      .map((k, idx) => ({ id: k.id, name: k.name.trim(), avatar: k.avatar || AVATARS[idx % AVATARS.length] }))
       .filter((k) => k.name.length > 0)
       .slice(0, MAX_KIDS);
 
@@ -690,7 +714,7 @@
 
   document.getElementById("addKid").addEventListener("click", () => {
     if (draft.kids.length >= MAX_KIDS) return;
-    draft.kids.push({ id: uid(), name: "" });
+    draft.kids.push({ id: uid(), name: "", avatar: AVATARS[draft.kids.length % AVATARS.length] });
     renderKidsEditor();
     const inputs = kidsEditor.querySelectorAll(".text-input");
     const last = inputs[inputs.length - 1];

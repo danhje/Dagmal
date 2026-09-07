@@ -62,6 +62,14 @@ on touch (tablets are a primary target here), and a touch-compatible
 implementation would need real complexity for a "keep order minor" UI
 detail. If that changes, buttons should stay as a fallback either way.
 
+Each kid has a persisted `avatar` (an emoji from `AVATARS` in `app.js`),
+defaulted by position when a kid is created or migrated from older data
+that had no `avatar` field. It's clickable — cycles to the next animal
+in `AVATARS` and saves — only on the big avatar in the main view kid
+card; the small copy next to the name in the parents pane is display-only
+(it mirrors `kid.avatar`, it doesn't set it), to keep "change your look"
+as a kid-facing, playful action rather than a settings-panel one.
+
 ## Conventions
 
 - Keep it dependency-free static HTML/CSS/JS unless there's a strong reason
