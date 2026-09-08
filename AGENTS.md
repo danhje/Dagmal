@@ -103,10 +103,29 @@ as a kid-facing, playful action rather than a settings-panel one.
 
 The fixed backdrop behind the header/banner (`.sky` in `index.html`,
 48vh tall) is a hand-drawn-style beach scene — sky, distant shore, sea,
-dunes, a sandy path, fence posts — built as one inline SVG plus a couple
-of emoji clouds. Across the horizon, clipped to the sky by `#skyClip`,
-sits the far side of the bay: headland, low scrub and a sliver of pale
-sand (the beach in the distance).
+a near beach, dunes, a sandy path, fence posts — built as one inline SVG
+plus a couple of emoji clouds. Across the horizon, clipped to the sky by
+`#skyClip`, sits the far side of the bay: headland, low scrub and a sliver
+of pale sand (the beach in the distance).
+
+The near shoreline is a curve, not a horizontal edge: `#groundClip` is a
+path whose top is that curve, so every bit of land is clipped to it. **The
+curve must stay above y 472** — that's `SHORE_SVG_Y` in `water.js`, where
+the shader `discard`s — so the sand always overlaps the water. Drop below
+it and a transparent gap opens along the whole shore. It currently runs
+y 434–465, leaving at least 7 units of overlap; the two `.foam` wash lines
+trace the same curve a little seaward of it, and the sand paints over their
+lower half so they read as foam running up the beach.
+
+The beach itself is `.beach`, a band of `#sandGrad` painted back over the
+foot of the dunes after they're drawn, so sand — not grass — meets the
+water the whole way across. Its top edge is the shoreline curve; its lower
+edge wanders on its own, making the beach 52–90 units wide rather than a
+ruled band. Sharing `#sandGrad` with the ground rect under it keeps the
+sand wet-dark at the water and pale inland, and makes the seam where the
+beach meets the central path invisible. If you move that lower edge, check
+the `.wildflowers` near it — four of them were nudged inland so they'd stay
+on the grass instead of stranding on the sand.
 
 The sea itself is live WebGL, in `water.js`: layered directional ripples
 whose gradient stands in for the two scrolling normal maps a three.js
