@@ -420,6 +420,7 @@
     draft = cloneStateForEditing();
     renderKidsEditor();
     renderRangesEditor();
+    resetTransferUi();
     overlay.hidden = false;
   }
 
@@ -645,6 +646,258 @@
     closeParents(); // also re-renders the main view with the new settings
     showToast("Saved! 🌟");
   }
+
+  // ---------------- backup: export / import ----------------
+  // Kids use a separate account on the same machine, and localStorage
+  // doesn't travel between browsers, macOS accounts or devices. So the
+  // parents pane can write the whole setup out as a small JSON document
+  // and read it back in.
+  //
+  // Deliberately configuration only: kids, avatars, time ranges and
+  // to-do items travel, today's check-off state does not. Checks are a
+  // per-day, per-device thing that already resets at midnight, and
+  // carrying yesterday's-in-another-browser progress across would either
+  // be thrown away by the date check or wrongly mark chores as done on
+  // the machine being set up. Import therefore starts the receiving
+  // browser on a clean day.
+
+  const EXPORT_APP_ID = "dagmal";
+  const EXPORT_SCHEMA = 1;
+  const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+  const exportTextEl = document.getElementById("exportText");
+  const importTextEl = document.getElementById("importText");
+  const importFileEl = document.getElementById("importFile");
+  const importErrorEl = document.getElementById("importError");
+  const importConfirmEl = document.getElementById("importConfirm");
+  const importConfirmTextEl = document.getElementById("importConfirmText");
+  let pendingImport = null;
+
+  function buildExport() {
+    return {
+      app: EXPORT_APP_ID,
+      schema: EXPORT_SCHEMA,
+      exportedAt: new Date().toISOString(),
+      data: {
+        kids: state.kids.map((k) => ({ id: k.id, name: k.name, avatar: k.avatar })),
+        timeRanges: state.timeRanges.map((r) => ({
+          id: r.id,
+          from: r.from,
+          to: r.to,
+          items: r.items.map((it) => ({ id: it.id, text: it.text })),
+        })),
+      },
+    };
+  }
+
+  const exportJson = () => JSON.stringify(buildExport(), null, 2);
+
+  function plural(n, word) {
+    return `${n} ${word}${n === 1 ? "" : "s"}`;
+  }
+
+  // Returns { config } on success or { error } on failure — and never
+  // touches `state` or localStorage either way, so a truncated paste or
+  // a stray file can't take the current setup down with it.
+  function parseImport(text) {
+    const raw = (text || "").trim();
+    if (!raw) return { error: "Nothing to import yet — choose a file or paste the backup text first." };
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      return { error: "That isn't readable as a backup — the text looks incomplete or cut off." };
+    }
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || parsed.app !== EXPORT_APP_ID) {
+      return { error: "That isn't a Dagmál backup." };
+    }
+    if (typeof parsed.schema !== "number" || !Number.isInteger(parsed.schema) || parsed.schema < 1) {
+      return { error: "That backup doesn't say which format it's in, so it can't be read safely." };
+    }
+    if (parsed.schema > EXPORT_SCHEMA) {
+      return {
+        error: `That backup is in a newer format (${parsed.schema}) than this page understands. Reload Dagmál on this device and try again.`,
+      };
+    }
+
+    const data = parsed.data;
+    if (!data || typeof data !== "object" || !Array.isArray(data.kids) || !Array.isArray(data.timeRanges)) {
+      return { error: "That backup is missing its kids or its time ranges." };
+    }
+    if (data.kids.length === 0) return { error: "That backup has no kids in it." };
+    if (data.timeRanges.length === 0) return { error: "That backup has no time ranges in it." };
+    if (data.kids.length > MAX_KIDS) return { error: `That backup has more than ${MAX_KIDS} kids in it.` };
+    if (data.timeRanges.length > MAX_RANGES) {
+      return { error: `That backup has more than ${MAX_RANGES} time ranges in it.` };
+    }
+
+    // Ids are reused so a future re-import lines up, but anything missing
+    // or duplicated gets a fresh one rather than colliding in `checks`.
+    const seenIds = new Set();
+    const takeId = (id) => {
+      if (typeof id === "string" && id && !seenIds.has(id)) {
+        seenIds.add(id);
+        return id;
+      }
+      return uid();
+    };
+
+    const kids = [];
+    for (const k of data.kids) {
+      if (!k || typeof k !== "object" || typeof k.name !== "string" || !k.name.trim()) {
+        return { error: "One of the kids in that backup is missing a name." };
+      }
+      kids.push({
+        id: takeId(k.id),
+        name: k.name.trim().slice(0, 30),
+        avatar: AVATARS.includes(k.avatar) ? k.avatar : AVATARS[kids.length % AVATARS.length],
+      });
+    }
+
+    const timeRanges = [];
+    for (const r of data.timeRanges) {
+      if (!r || typeof r !== "object") return { error: "A time range in that backup is malformed." };
+      if (typeof r.from !== "string" || typeof r.to !== "string" || !TIME_RE.test(r.from) || !TIME_RE.test(r.to)) {
+        return { error: "A time range in that backup has an invalid start or end time." };
+      }
+      if (!Array.isArray(r.items)) return { error: "A time range in that backup has no to‑do list." };
+      if (r.items.length > MAX_ITEMS) {
+        return { error: `A time range in that backup has more than ${MAX_ITEMS} to‑dos.` };
+      }
+      const items = [];
+      for (const it of r.items) {
+        if (!it || typeof it !== "object" || typeof it.text !== "string" || !it.text.trim()) {
+          return { error: "A to‑do item in that backup is missing its text." };
+        }
+        items.push({ id: takeId(it.id), text: it.text.trim().slice(0, 60) });
+      }
+      timeRanges.push({ id: takeId(r.id), from: r.from, to: r.to, items });
+    }
+
+    return { config: { kids, timeRanges } };
+  }
+
+  // Writes storage first and only swaps `state` if that succeeded, so a
+  // full or unavailable localStorage leaves the running setup intact too.
+  function applyImportedConfig(config) {
+    const next = {
+      kids: config.kids,
+      timeRanges: config.timeRanges,
+      checksDate: todayKey(),
+      checks: {},
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch (e) {
+      return false;
+    }
+    state = next;
+    return true;
+  }
+
+  function showImportError(msg) {
+    importErrorEl.textContent = msg;
+    importErrorEl.hidden = false;
+  }
+
+  function resetTransferUi() {
+    pendingImport = null;
+    exportTextEl.hidden = true;
+    exportTextEl.value = "";
+    importTextEl.value = "";
+    importErrorEl.hidden = true;
+    importConfirmEl.hidden = true;
+  }
+
+  document.getElementById("exportDownload").addEventListener("click", () => {
+    const blob = new Blob([exportJson()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `dagmal-backup-${todayKey()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Backup file saved ⬇️");
+  });
+
+  document.getElementById("exportCopy").addEventListener("click", () => {
+    const json = exportJson();
+    // Always reveal the text as well: if the clipboard is blocked, the
+    // parent can still select it by hand.
+    exportTextEl.value = json;
+    exportTextEl.hidden = false;
+    const fallback = () => {
+      exportTextEl.focus();
+      exportTextEl.select();
+      showToast("Select the text and copy it 📋");
+    };
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+      fallback();
+      return;
+    }
+    navigator.clipboard.writeText(json).then(() => showToast("Backup copied 📋"), fallback);
+  });
+
+  document.getElementById("importChooseFile").addEventListener("click", () => importFileEl.click());
+
+  importFileEl.addEventListener("change", () => {
+    const file = importFileEl.files && importFileEl.files[0];
+    importFileEl.value = ""; // so picking the same file twice fires again
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      importTextEl.value = String(reader.result || "");
+      importErrorEl.hidden = true;
+      importConfirmEl.hidden = true;
+      pendingImport = null;
+    };
+    reader.onerror = () => showImportError("Couldn't read that file.");
+    reader.readAsText(file);
+  });
+
+  document.getElementById("importCheck").addEventListener("click", () => {
+    importConfirmEl.hidden = true;
+    pendingImport = null;
+    const result = parseImport(importTextEl.value);
+    if (result.error) {
+      showImportError(result.error);
+      return;
+    }
+    importErrorEl.hidden = true;
+    pendingImport = result.config;
+    importConfirmTextEl.textContent =
+      `This replaces your current setup (${plural(state.kids.length, "kid")}, ` +
+      `${plural(state.timeRanges.length, "time range")}) with ` +
+      `${plural(pendingImport.kids.length, "kid")} and ` +
+      `${plural(pendingImport.timeRanges.length, "time range")} from the backup, ` +
+      `and clears today's check‑offs. There's no undo.`;
+    importConfirmEl.hidden = false;
+  });
+
+  document.getElementById("importCancel").addEventListener("click", () => {
+    pendingImport = null;
+    importConfirmEl.hidden = true;
+  });
+
+  document.getElementById("importApply").addEventListener("click", () => {
+    if (!pendingImport) return;
+    if (!applyImportedConfig(pendingImport)) {
+      importConfirmEl.hidden = true;
+      pendingImport = null;
+      showImportError("Couldn't save the imported setup — storage might be full. Nothing was changed.");
+      return;
+    }
+    resetTransferUi();
+    draft = cloneStateForEditing();
+    renderKidsEditor();
+    renderRangesEditor();
+    renderMain();
+    showToast("Setup imported! 🌟");
+  });
 
   // ---------------- parents gate ----------------
   // A simple arithmetic check to keep young kids from wandering into

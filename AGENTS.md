@@ -24,6 +24,35 @@ State (kids, time ranges, to-do items, and today's checked-off items) lives
 entirely in `localStorage` under the key `dagmal:state`. There is no server
 and no login. Checked-off items reset automatically each new day.
 
+Because there's no server, the parents pane has a "Backup & move" section
+that reads and writes that state as a small JSON document, so a setup can
+travel between browsers, macOS accounts and devices. Export offers both a
+downloaded `dagmal-backup-YYYY-MM-DD.json` file and a copyable text blob —
+the file is what actually works between two macOS accounts (the clipboard
+isn't shared across login sessions), while the blob is the easy path on a
+tablet, where file pickers are fiddly and text can just be AirDropped or
+messaged. Import accepts either (file picker fills the same textarea).
+
+The document is `{ app: "dagmal", schema: 1, exportedAt, data: { kids,
+timeRanges } }`. `app`/`schema` are what `parseImport` checks first — bump
+`EXPORT_SCHEMA` and handle older values there if the shape ever changes;
+a backup with a *higher* schema than the running page is refused rather
+than half-read.
+
+**Configuration travels, check-off state does not.** `data` holds only kids
+(with avatars), time ranges and their items; import resets `checks` and sets
+`checksDate` to today. Checks are per-day and per-device, already wiped at
+midnight, so carrying them across would either be discarded by the date
+check or wrongly mark chores done on the machine being set up.
+
+`parseImport` returns `{ config }` or `{ error }` and touches neither
+`state` nor `localStorage`, and `applyImportedConfig` writes storage
+*before* swapping `state`. So a truncated paste, a foreign JSON file or a
+full disk all leave the existing setup exactly as it was, with an inline
+error. Keep that ordering — silently wiping a parent's setup is the one
+failure this feature must never have. Import is two-step: validate first,
+then show a warning naming what's being replaced, then apply.
+
 A time range has no name of its own — it's defined by a `from`/`to` time
 (`"HH:MM"`, 24h), and the main view labels it with a formatted time span
 (e.g. "7:00 AM – 8:00 AM") plus an icon picked from the start hour. Old

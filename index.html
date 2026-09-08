@@ -238,6 +238,49 @@
         <div id="rangesEditor" class="ranges-editor"></div>
         <button id="addRange" class="btn btn-add" type="button">+ Add time range</button>
       </section>
+
+      <section class="settings-section">
+        <div class="settings-section-head">
+          <h3>💾 Backup &amp; move</h3>
+          <span class="hint">Move this setup to another browser, account or device</span>
+        </div>
+
+        <div class="transfer-block">
+          <h4 class="transfer-title">Export</h4>
+          <p class="transfer-note">
+            Saves kids, avatars, time ranges and to‑dos — the setup as you last saved it.
+            Today's check‑offs stay on this device.
+          </p>
+          <div class="transfer-actions">
+            <button id="exportDownload" class="btn btn-add" type="button">⬇️ Download file</button>
+            <button id="exportCopy" class="btn btn-add" type="button">📋 Copy text</button>
+          </div>
+          <textarea id="exportText" class="text-input transfer-text" rows="4" readonly hidden
+            aria-label="Backup text"></textarea>
+        </div>
+
+        <div class="transfer-block">
+          <h4 class="transfer-title">Import</h4>
+          <p class="transfer-note">
+            Reads a backup from this same page. It <strong>replaces</strong> the kids and routines above.
+          </p>
+          <div class="transfer-actions">
+            <button id="importChooseFile" class="btn btn-add" type="button">📂 Choose file…</button>
+            <input id="importFile" type="file" accept="application/json,.json,text/plain" hidden>
+          </div>
+          <textarea id="importText" class="text-input transfer-text" rows="4"
+            placeholder="…or paste the backup text here" aria-label="Backup text to import"></textarea>
+          <p id="importError" class="transfer-error" role="alert" hidden></p>
+          <button id="importCheck" class="btn btn-add" type="button">Import &amp; replace…</button>
+          <div id="importConfirm" class="transfer-confirm" hidden>
+            <p id="importConfirmText" class="transfer-confirm-text"></p>
+            <div class="transfer-actions">
+              <button id="importApply" class="btn btn-danger" type="button">Yes, replace everything</button>
+              <button id="importCancel" class="btn btn-add" type="button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="parents-footer">

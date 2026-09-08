@@ -10,6 +10,8 @@ A sunny, playful nature-themed static site with morning and bedtime routines for
   - 1–5 kids
   - 1–5 time ranges, each with a start and end time (e.g. 7:00 AM – 8:00 AM)
   - 1–50 to-do items per time range
+  - Backup & move: export the setup as a JSON file or a copyable text blob,
+    and import it into another browser, computer account or device
 - Checklists reset automatically each day.
 
 ## Running locally

@@ -718,6 +718,76 @@ body {
   font-family: inherit;
 }
 
+/* ---------- backup & move (export / import) ---------- */
+
+.transfer-block {
+  border: 2px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 0.9rem;
+  background: #fffdf7;
+  margin-bottom: 0.7rem;
+}
+
+.transfer-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  color: var(--leaf-dark);
+}
+
+.transfer-note {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.transfer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.transfer-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  resize: vertical;
+  margin-bottom: 0.5rem;
+}
+
+.transfer-error {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #b42318;
+  background: #ffe9e6;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+}
+
+.transfer-confirm {
+  margin-top: 0.6rem;
+  border: 2px solid #ffd9a8;
+  background: #fff6e6;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.8rem;
+}
+
+.transfer-confirm-text {
+  margin: 0 0 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #7a4a00;
+}
+
+.btn-danger {
+  background: var(--berry);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+}
+.btn-danger:hover { background: #e85a5a; }
+
 .limit-msg {
   font-size: 0.78rem;
   color: #b45309;
