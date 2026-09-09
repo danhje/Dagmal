@@ -10,7 +10,6 @@
 <body>
 
 <div class="sky">
-  <canvas class="sea-canvas" aria-hidden="true"></canvas>
   <svg class="scene" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
@@ -36,8 +35,8 @@
       </clipPath>
       <!-- The near shoreline. The land is clipped to it rather than to a
            straight edge, so the water meets the sand along a curve. Kept
-           above y 472 everywhere — that's where water.js stops drawing, so
-           the sand has to overlap it or a gap opens up. -->
+           above y 474 everywhere — that's where the sea rect below ends, so
+           the sand always overlaps painted sea and no gap can open up. -->
       <clipPath id="groundClip">
         <path d="M -20 458 C 80 442, 165 434, 285 444 S 452 468, 570 462
                  S 742 438, 872 434 S 1052 458, 1158 464 S 1338 448, 1442 440
@@ -70,10 +69,11 @@
         fill="var(--sand-light)" opacity="0.85" />
     </g>
 
-    <!-- Fallback sea: a flat gradient with CSS-animated shimmer. The WebGL
-         water in water.js fades this out once it has drawn a frame; it stays
-         put when there's no WebGL or the user prefers reduced motion. -->
-    <g class="sea-fallback">
+    <!-- The sea: a flat gradient with a little CSS-animated shimmer and two
+         drifting wave lines. This used to be the no-WebGL fallback behind a
+         live shader; the shader is gone (it cost too much CPU on a tablet
+         left running all day) and this is the sea now. -->
+    <g class="sea">
       <rect x="0" y="284" width="1600" height="190" fill="url(#seaGrad)" />
 
       <g class="shimmer">
@@ -315,6 +315,5 @@
 <div id="toast" class="toast" hidden></div>
 
 <script src="app.js"></script>
-<script src="water.js"></script>
 </body>
 </html>
