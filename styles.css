@@ -60,34 +60,8 @@ body {
   display: block;
 }
 
-.shimmer-blob {
-  transform-origin: center;
-  animation: shimmer-drift 22s ease-in-out infinite;
-}
-.shimmer-a { animation-duration: 19s; }
-.shimmer-b { animation-duration: 24s; animation-delay: -6s; }
-.shimmer-c { animation-duration: 21s; animation-delay: -12s; }
-.shimmer-d { animation-duration: 26s; animation-delay: -3s; }
-
-@keyframes shimmer-drift {
-  0% { transform: translateX(-40px); opacity: 0.55; }
-  50% { transform: translateX(40px); opacity: 1; }
-  100% { transform: translateX(-40px); opacity: 0.55; }
-}
-
-.wave-a, .wave-b {
-  animation: wave-drift 14s ease-in-out infinite;
-}
-.wave-b { animation-duration: 18s; animation-delay: -5s; }
-
-@keyframes wave-drift {
-  0% { transform: translateX(-25px); }
-  50% { transform: translateX(25px); }
-  100% { transform: translateX(-25px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .shimmer-blob, .wave-a, .wave-b, .cloud {
+  .cloud {
     animation: none !important;
   }
 }

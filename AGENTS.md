@@ -128,11 +128,24 @@ beach meets the central path invisible. If you move that lower edge, check
 the `.wildflowers` near it — four of them were nudged inland so they'd stay
 on the grass instead of stranding on the sand.
 
-The sea is `.sea`: a flat `#seaGrad` rect (y 284–474, `--sea-deep` at the
-horizon to `--sea-light` at the shore), four blurred white `.shimmer-blob`
-ellipses and two `.wave-a`/`.wave-b` lines, both drifting sideways on slow
-CSS keyframes. Retinting `--sea-deep`/`--sea-light` retints the sea. Sand,
-dunes and foam paint over its lower edge.
+The sea is `.sea`, and it is one `#seaGrad` rect (y 284–474, `--sea-deep`
+at the horizon to `--sea-light` at the shore) with nothing on top of it.
+Retinting `--sea-deep`/`--sea-light` retints the sea. Sand, dunes and foam
+paint over its lower edge. It stays a gradient rather than one flat colour:
+deep at the horizon and pale at the shore is the only thing giving the
+water depth, and a single flat blue reads as a painted wall.
+
+It did not start that way. From the first scene commit (`eb060df`) the sea
+carried four blurred white `.shimmer-blob` ellipses and two `.wave-a`/
+`.wave-b` lines drifting on CSS keyframes; there has never been a revision
+where the sea was plain. They were removed for reading as fussy white
+specks. Measured against the same frame, the shimmer moved pixels by up to
+47/255 — clearly visible blobs — while the wave lines peaked at 8/255 and
+were already all but invisible, so they went too rather than stay as an
+animated layer nobody could see. Their keyframes (`shimmer-drift`,
+`wave-drift`), the `#softenLg` filter that only they used, and their entry
+in the `prefers-reduced-motion` block went with them. Don't add white
+overlays back to the water.
 
 ### Don't bring the shader back
 
@@ -146,12 +159,12 @@ page open all day. It was removed, along with its canvas, its rAF loop, its
 visibility handling and its WebGL/reduced-motion detection, and the sea
 above is what it had been fading out.
 
-So: the flat sea is the decision, not a placeholder or a fallback. If a
-richer sea ever comes back it has to be free when nothing is interacting —
-and note that the CSS shimmer is not literally free either, since it
-animates filtered SVG elements. `prefers-reduced-motion` already stops it;
-dropping the `.shimmer`/`.wave-lines` groups leaves a plain gradient sea
-and is the next lever if the page is ever still too warm.
+So: the plain sea is the decision, not a placeholder or a fallback. The
+follow-up lever — dropping the shimmer and wave lines, which animated
+filtered SVG elements and so weren't free either — has since been pulled
+too. Nothing in the backdrop animates now except the three emoji clouds.
+If a richer sea is ever proposed again, it has to cost nothing while the
+page is just sitting there, which is what this page does all day.
 
 The scene is intentionally muted and confined to the top band so it never
 competes with the opaque kid cards and checkboxes, which is the one thing

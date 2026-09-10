@@ -27,9 +27,6 @@
       <filter id="soften" x="-60%" y="-60%" width="220%" height="220%">
         <feGaussianBlur stdDeviation="9" />
       </filter>
-      <filter id="softenLg" x="-80%" y="-80%" width="260%" height="260%">
-        <feGaussianBlur stdDeviation="18" />
-      </filter>
       <clipPath id="skyClip">
         <rect x="0" y="0" width="1600" height="286" />
       </clipPath>
@@ -69,24 +66,13 @@
         fill="var(--sand-light)" opacity="0.85" />
     </g>
 
-    <!-- The sea: a flat gradient with a little CSS-animated shimmer and two
-         drifting wave lines. This used to be the no-WebGL fallback behind a
-         live shader; the shader is gone (it cost too much CPU on a tablet
-         left running all day) and this is the sea now. -->
+    <!-- The sea: one gradient rect, and nothing else. It had white shimmer
+         blobs and wave lines over it from the very first scene commit; they
+         read as fussy specks and are gone. Deliberately still a gradient
+         rather than one flat colour — deep at the horizon, pale at the
+         shore is what gives the water any depth at all. -->
     <g class="sea">
       <rect x="0" y="284" width="1600" height="190" fill="url(#seaGrad)" />
-
-      <g class="shimmer">
-        <ellipse class="shimmer-blob shimmer-a" cx="260" cy="340" rx="150" ry="26" fill="#ffffff" opacity="0.3" filter="url(#softenLg)" />
-        <ellipse class="shimmer-blob shimmer-b" cx="760" cy="380" rx="190" ry="30" fill="#ffffff" opacity="0.28" filter="url(#softenLg)" />
-        <ellipse class="shimmer-blob shimmer-c" cx="1180" cy="350" rx="170" ry="26" fill="#ffffff" opacity="0.26" filter="url(#softenLg)" />
-        <ellipse class="shimmer-blob shimmer-d" cx="1440" cy="410" rx="140" ry="22" fill="#ffffff" opacity="0.24" filter="url(#softenLg)" />
-      </g>
-
-      <g class="wave-lines" fill="none" stroke="#ffffff" stroke-linecap="round">
-        <path class="wave-a" d="M -50 360 Q 200 348 450 360 T 950 360 T 1450 360 T 1650 360" stroke-width="4" opacity="0.22" filter="url(#soften)" />
-        <path class="wave-b" d="M -50 410 Q 250 398 550 410 T 1050 410 T 1650 410" stroke-width="5" opacity="0.2" filter="url(#soften)" />
-      </g>
     </g>
 
     <!-- Wash lines, tracing the shoreline curve just seaward of it. The
